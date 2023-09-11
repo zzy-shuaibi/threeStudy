@@ -1,7 +1,8 @@
 const { defineConfig } = require('@vue/cli-service')
 module.exports = defineConfig({
   transpileDependencies: true,
-  lintOnSave:false,
+  lintOnSave: false,
+  publicPath: './',
   // css:{
   //   loaderOptions:{
   //     less:{
@@ -9,4 +10,8 @@ module.exports = defineConfig({
   //     }
   //   }
   // }
+  devServer: {
+    port: 8085,
+    allowedHosts: 'all'
+  }
 })

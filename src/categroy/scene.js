@@ -4,6 +4,8 @@ import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonCont
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
 import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
 import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader'
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 export class Scene {
     constructor(el) {
         this.point = null
@@ -19,7 +21,7 @@ export class Scene {
         this.scenes = new THREE.Scene()
         //创建一个相机
         this.camera = new THREE.PerspectiveCamera(105, window.innerWidth / window.innerHeight, 0.1, 1000)
-        this.camera.position.set(5, 6, 7)
+        this.camera.position.set(1, 1, 1)
         this.scenes.add(this.camera)
     }
     //渲染
@@ -38,7 +40,6 @@ export class Scene {
     }
     //渲染一个球形
     circle(radius, envmap) {
-        // let color = `rgb(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255})`
         const circleGeo = new THREE.SphereGeometry(radius, 32, 32);
         const circleMate = new THREE.MeshStandardMaterial({ color: '0xffffff', metalness: 0.7, roughness: 0.1, envMap: envmap })
         const circleMesh = new THREE.Mesh(circleGeo, circleMate)
@@ -123,5 +124,25 @@ export class Scene {
         this.scenes.background = loader.load(srcarr)
         this.scenes.environment = loader.load(srcarr)
         return loader.load(srcarr)
+    }
+    //文字
+    font() {
+        const font = './fonts/gentilis_regular.typeface.json'
+        const textload = new FontLoader()
+        textload.load(font, (font) => {
+            const TextGeo = new TextGeometry(
+                'hello threejs',
+                {
+                    font: font,
+                    size: 0.8,
+                    height: 0.5,
+                    curveSegments: 1,
+                }
+            )
+            TextGeo.center()
+            const texttrue = new THREE.MeshBasicMaterial({ color: "#ff0000" })
+            const mesh = new THREE.Mesh(TextGeo, texttrue)
+            this.scenes.add(mesh)
+        })
     }
 }
