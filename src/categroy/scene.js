@@ -3,7 +3,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FirstPersonControls } from 'three/examples/jsm/controls/FirstPersonControls';
 import { DragControls } from 'three/examples/jsm/controls/DragControls';
 import { FlyControls } from 'three/examples/jsm/controls/FlyControls';
-import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader'
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry'
 export class Scene {
@@ -21,7 +20,7 @@ export class Scene {
         this.scenes = new THREE.Scene()
         //创建一个相机
         this.camera = new THREE.PerspectiveCamera(105, window.innerWidth / window.innerHeight, 0.1, 1000)
-        this.camera.position.set(1, 1, 1)
+        this.camera.position.set(3, 3, 3)
         this.scenes.add(this.camera)
     }
     //渲染
@@ -81,12 +80,12 @@ export class Scene {
     }
     //光线(场景光)
     Lights() {
-        const light = new THREE.AmbientLight(0x303030, 1);
+        const light = new THREE.AmbientLight(0x303030, 5);
         this.scenes.add(light);
     }
     pointLight() {
         const light = new THREE.PointLight(0x404040, 10, 0, 2);
-        light.position.set(0, 0, 0)
+        light.position.set(10, 10, 10)
         light.castShadow = this.Shadow;
         this.scenes.add(light);
     }

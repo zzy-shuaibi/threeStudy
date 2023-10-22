@@ -1,11 +1,6 @@
 <template>
   <div id="app" ref="app">
     <div class="home" ref="home"></div>
-    <!-- <GeoPresent
-      class="geoPresnet"
-      v-show="present"
-      :info="geoinfo"
-    ></GeoPresent> -->
   </div>
 </template>
 
@@ -13,10 +8,11 @@
 import * as THREE from "three";
 import { Scene } from "@/categroy/scene";
 import gsap from "gsap";
-import GeoPresent from "@/components/geoPresent.vue";
 import { Water } from "three/examples/jsm/objects/Water2";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import CANNON from "cannon";
+import * as dat from "dat.gui";
 const clock = new THREE.Clock();
 export default {
   name: "App",
@@ -26,90 +22,41 @@ export default {
       scene1: null,
       cube1: null,
       control1: null,
-      circle1: null,
-      circle2: null,
-      control2: null,
-      cube1Gsap: null,
-      present: false,
-      geoinfo: {
-        distance: "11",
-      },
       raycaster: new THREE.Raycaster(),
-      mouse: new THREE.Vector2(),
-      circles: [],
       points: "",
       pointgeo: "",
-      count: 200000,
-      clock: "",
+      count: 10000,
+      world: new CANNON.World(),
+      dat: new dat.GUI(),
+      oldtime: 0,
+      pyobjs: [],
+      creat: {},
+      mixanim: null,
     };
   },
-  components: {
-    GeoPresent,
-  },
+
   methods: {
     render() {
       this.control1.update();
-      const elapsed = clock.getElapsedTime();
-      this.circles.forEach((item) => {
-        item.position.set(
-          Math.sin(elapsed * item.speed) * item.radus,
-          0,
-          Math.cos(elapsed * item.speed) * item.radus
-        );
-      });
-      const time = this.clock.getElapsedTime();
-      this.pointsanim(time);
+
+      const time = clock.getElapsedTime();
+      const steptime = time - this.oldtime;
+      this.oldtime = time;
+      this.world.step(1 / 60, steptime, 3);
+      if (this.mixanim != null) this.mixanim.update(steptime);
+      // this.pyobjs.forEach((item) => {
+      //   item.three.position.copy(item.cammon.position);
+      //   item.three.quaternion.copy(item.cammon.quaternion);
+      //   item.cammon.applyForce(
+      //     new CANNON.Vec3(Math.random() * 5, 0, Math.random() * 5),
+      //     item.cammon.position
+      //   );
+      // });
 
       this.scene1.render();
       requestAnimationFrame(this.render);
     },
-    AnimationCube() {
-      this.cube1Gsap = gsap
-        .timeline({
-          repeat: -1,
-        })
-        .to(this.cube1.position, { x: 5, duration: 3 })
-        .to(this.cube1.position, { x: 0, duration: 3 })
-        .to(this.cube1.position, { y: 5, duration: 3 })
-        .to(this.cube1.position, { y: 0, duration: 3 })
-        .to(this.cube1.position, { z: 5, duration: 3 })
-        .to(this.cube1.position, { z: 0, duration: 3 });
-      this.cube1.gsapid = "cube1Gsap";
-    },
-    //根据鼠标当前位置生成一个球
-    pointctrcle() {
-      //绑定事件
 
-      // let tuxe = this.scene1.sceneBackground([
-      //   require("@/assets/px.jpg"),
-      //   require("@/assets/nx.jpg"),
-      //   require("@/assets/py.jpg"),
-      //   require("@/assets/ny.jpg"),
-      //   require("@/assets/pz.jpg"),
-      //   require("@/assets/nz.jpg"),
-      // ]);
-
-      this.circle4 = this.scene1.circle(0.5);
-
-      this.raycaster.setFromCamera(this.mouse, this.scene1.camera);
-      const intersects = this.raycaster.intersectObjects(
-        this.scene1.scenes.children
-      );
-      if (intersects.length > 0) {
-        this.circle4.position.set(
-          intersects[0].point.x,
-          0,
-          intersects[0].point.z
-        );
-        this.circle4.speed = Math.random() * 2;
-        this.circle4.radus = Math.sqrt(
-          Math.pow(intersects[0].point.x, 2) +
-            Math.pow(intersects[0].point.z, 2)
-        );
-        this.circle1.add(this.circle4);
-        this.circles.push(this.circle4);
-      }
-    },
     //粒子动画
     pointsanim(colok) {
       for (let i = 0; i < this.count; i++) {
@@ -122,42 +69,20 @@ export default {
   },
   async mounted() {
     const home = this.$refs.home;
+    this.world.gravity.set(0, -9.8, 0);
     this.clock = new THREE.Clock();
-    // home.addEventListener("click", () => {
-    //   this.pointctrcle();
-    // });
-    // this.$refs.home.addEventListener(
-    //   "mousemove",
-    //   (e) => {
-    //     this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    //     this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    //   },
-    //   false
-    // );
+
     this.scene1 = new Scene(home);
-    // this.scene1.openShadow();
     this.control1 = this.scene1.controlCamers();
-    // this.scene1.Lights();
-    // this.scene1.pointLight();
-    // this.scene1.axes();
-    //行星 父子层级
+    // 光线
     {
-      // const circleGeo = new THREE.SphereGeometry(1, 32, 32);
-      // const circleMate = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-      // this.circle1 = new THREE.Mesh(circleGeo, circleMate);
-      // this.circle1 = this.scene1.circle(1);
-      // this.circle2 = this.scene1.circle(0.5);
-      // this.circle3 = this.scene1.circle(0.3);
-      // this.circle1.position.set(0, 0, 0);
-      // this.scene1.scenes.add(this.circle1);
-      // this.circle2.position.set(-2, -1, 0);
-      // this.circle1.add(this.circle2);
-      // this.circle2.speed = 1 / 2;
-      // this.circle2.radus = 5;
-      // this.circle3.speed = 2;
-      // this.circle3.radus = 2;
-      // this.circle2.add(this.circle3);
-      // this.circles.push(this.circle2, this.circle3);
+      this.scene1.Lights();
+      this.scene1.pointLight();
+    }
+
+    //参考系
+    {
+      // this.scene1.axes();
     }
 
     //鼠标点击
@@ -205,45 +130,139 @@ export default {
       //   require("@/assets/nz.jpg"),
       // ]);
     }
-
-    //模型
-    {
-      // const dracoLoader = new DRACOLoader();
-      // const gltfLoader = new GLTFLoader();
-      // dracoLoader.setDecoderPath("./draco");
-      // gltfLoader.setDRACOLoader(dracoLoader);
-      // gltfLoader.load("./draco/Flower.glb", (gitf) => {
-      //   this.scene1.scenes.add(gitf.scene);
-      // });
-      // this.scene1.font();
-    }
     //粒子
     {
-      this.pointgeo = new THREE.BufferGeometry();
-      const texture = new THREE.TextureLoader().load(
-        require("@/assets/snow.png")
-      );
-      const positions = new Float32Array(this.count * 3);
-      for (let i = 0; i < this.count * 3; i++) {
-        positions[i] = (Math.random() - 0.5) * 5;
-      }
-      // position.position.set()
-      this.pointgeo.setAttribute(
-        "position",
-        new THREE.BufferAttribute(positions, 3)
-      );
-
-      const pointMaterial = new THREE.PointsMaterial();
-      pointMaterial.transparent = true;
-      pointMaterial.alphaMap = texture;
-      pointMaterial.size = 0.02;
-      pointMaterial.sizeAttenuation = true;
-      pointMaterial.depthTest = false;
-
-      this.points = new THREE.Points(this.pointgeo, pointMaterial);
-
-      this.scene1.scenes.add(this.points);
+      // this.pointgeo = new THREE.BufferGeometry();
+      // const texture = new THREE.TextureLoader().load(
+      //   require("@/assets/snow.png")
+      // );
+      // const positions = new Float32Array(this.count * 3);
+      // for (let i = 0; i < this.count * 3; i++) {
+      //   positions[i] = (Math.random() - 0.5) * 5;
+      // }
+      // // position.position.set()
+      // this.pointgeo.setAttribute(
+      //   "position",
+      //   new THREE.BufferAttribute(positions, 3)
+      // );
+      // const pointMaterial = new THREE.PointsMaterial();
+      // pointMaterial.transparent = true;
+      // pointMaterial.alphaMap = texture;
+      // pointMaterial.size = 0.02;
+      // pointMaterial.sizeAttenuation = true;
+      // pointMaterial.depthWrite = false;
+      // this.points = new THREE.Points(this.pointgeo, pointMaterial);
+      // this.scene1.scenes.add(this.points);
       // this.pointsanim();
+    }
+    //cube
+    {
+      // const texture = new THREE.TextureLoader().load(
+      //   require("@/assets/brick_diffuse.jpg")
+      // );
+      // const aotexture = new THREE.TextureLoader().load(
+      //   require("@/assets/brick_bump.jpg")
+      // );
+      // const geo = new THREE.PlaneGeometry(1, 1, 1024, 1024);
+      // const material = new THREE.MeshStandardMaterial();
+      // //map最普通材质，设计物品的基础外形
+      // material.map = texture;
+      // //aoMap设置材质阴影
+      // material.aoMap = aotexture;
+      // material.aoMapIntensity = 2;
+      // //displacementMap设置材质的突起和凹陷
+      // material.displacementMap = aotexture;
+      // material.displacementScale = 0.05;
+      // this.cube1 = new THREE.Mesh(geo, material);
+      // this.cube1.lights = true;
+      // this.cube1.castShadow = true;
+      // this.cube1.receiveShadow = true;
+      // this.scene1.scenes.add(this.cube1);
+    }
+    //物理
+    {
+      // //生成带物理是方型物品
+      // const pybox = (width, height, deep, position) => {
+      //   //生成基础threejs物体
+      //   const geometry = new THREE.BoxGeometry(width, height, deep, 32, 32);
+      //   const material = new THREE.MeshBasicMaterial({
+      //     color: 0xff0000,
+      //   });
+      //   const cube = new THREE.Mesh(geometry, material);
+      //   cube.position.copy(position);
+      //   //生成物理世界的物体
+      //   const pybox = new CANNON.Box(
+      //     new CANNON.Vec3(width * 0.5, height * 0.5, deep * 0.5)
+      //   );
+      //   const pybody = new CANNON.Body({
+      //     mass: 1,
+      //     // position: new CANNON.Vec3(0, 3, 0),
+      //     shape: pybox,
+      //   });
+      //   pybody.position.copy(position);
+      //   //物体发生碰撞后触发的函数，可以添加碰撞声音等
+      //   pybody.addEventListener("collide", () => {
+      //     console.log("collide");
+      //   });
+      //   this.scene1.scenes.add(cube);
+      //   this.world.addBody(pybody);
+      //   this.pyobjs.push({ three: cube, cammon: pybody });
+      // };
+      // //在datui中加入添加带物理的方型物品函数
+      // this.creat.creatBox = () => {
+      //   pybox(Math.random() * 0.5, Math.random() * 0.5, Math.random() * 0.5, {
+      //     x: Math.random() * 2,
+      //     y: (Math.random() + 1) * 3,
+      //     z: Math.random() * 2,
+      //   });
+      // };
+      // this.dat.add(this.creat, "creatBox");
+      // //生成一个初始的方型
+      // pybox(1, 1, 1, { x: 0, y: 3, z: 0 });
+      // //下方添加一个物理平面(无限大)
+      // const planegeo = new THREE.PlaneGeometry(20, 20);
+      // const planeMate = new THREE.MeshBasicMaterial({ color: 0xcccccc });
+      // const plane = new THREE.Mesh(planegeo, planeMate);
+      // plane.rotation.x = -Math.PI / 2;
+      // this.scene1.scenes.add(plane);
+      // const pyplane = new CANNON.Plane();
+      // const pyplaneBody = new CANNON.Body({
+      //   mass: 0,
+      //   shape: pyplane,
+      // });
+      // pyplaneBody.quaternion.setFromAxisAngle(
+      //   new CANNON.Vec3(-1, 0, 0),
+      //   Math.PI / 2
+      // );
+      // this.world.addBody(pyplaneBody);
+      // //设置材质，影响摩擦，弹力之类的
+      // const defaultMate = new CANNON.Material("default");
+      // const defaultConcatMate = new CANNON.ContactMaterial(
+      //   defaultMate,
+      //   defaultMate,
+      //   { friction: 0.3, restitution: 0.5 }
+      // );
+      // this.world.addContactMaterial(defaultConcatMate);
+      // this.world.allowSleep = true;
+      // this.world.defaultContactMaterial = defaultConcatMate;
+    }
+    //导入模型
+    {
+      const gltfLoader = new GLTFLoader();
+      const dracoLoader = new DRACOLoader();
+      dracoLoader.setDecoderPath("./draco/");
+      gltfLoader.setDRACOLoader(dracoLoader);
+      gltfLoader.load(
+        "./moudle/BrainStem/glTF-Draco/BrainStem.gltf",
+        (gltf) => {
+          console.log(gltf);
+          this.mixanim = new THREE.AnimationMixer(gltf.scene);
+          const anim = this.mixanim.clipAction(gltf.animations[0]);
+          anim.play();
+          gltf.scene.scale.set(2, 2, 2);
+          this.scene1.scenes.add(gltf.scene);
+        }
+      );
     }
     this.render();
   },
