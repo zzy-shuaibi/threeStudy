@@ -84,7 +84,7 @@ export class Scene {
         this.scenes.add(light);
     }
     pointLight() {
-        const light = new THREE.PointLight(0x404040, 10, 0, 2);
+        const light = new THREE.PointLight(0x404040, 1, 0, 2);
         light.position.set(10, 10, 10)
         light.castShadow = this.Shadow;
         this.scenes.add(light);

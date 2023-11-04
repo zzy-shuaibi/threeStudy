@@ -11,6 +11,8 @@ import gsap from "gsap";
 import { Water } from "three/examples/jsm/objects/Water2";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
+import vertexShader from "@/shader/vertexShader.glsl";
+import fragmentShader from "@/shader/fragmentShader.glsl";
 import CANNON from "cannon";
 import * as dat from "dat.gui";
 const clock = new THREE.Clock();
@@ -32,6 +34,7 @@ export default {
       pyobjs: [],
       creat: {},
       mixanim: null,
+      ls: null,
     };
   },
 
@@ -52,7 +55,7 @@ export default {
       //     item.cammon.position
       //   );
       // });
-
+      this.ls.uniforms.time.value = time;
       this.scene1.render();
       requestAnimationFrame(this.render);
     },
@@ -248,21 +251,64 @@ export default {
     }
     //导入模型
     {
-      const gltfLoader = new GLTFLoader();
-      const dracoLoader = new DRACOLoader();
-      dracoLoader.setDecoderPath("./draco/");
-      gltfLoader.setDRACOLoader(dracoLoader);
-      gltfLoader.load(
-        "./moudle/BrainStem/glTF-Draco/BrainStem.gltf",
-        (gltf) => {
-          console.log(gltf);
-          this.mixanim = new THREE.AnimationMixer(gltf.scene);
-          const anim = this.mixanim.clipAction(gltf.animations[0]);
-          anim.play();
-          gltf.scene.scale.set(2, 2, 2);
-          this.scene1.scenes.add(gltf.scene);
-        }
-      );
+      // const gltfLoader = new GLTFLoader();
+      // const dracoLoader = new DRACOLoader();
+      // dracoLoader.setDecoderPath("./draco/");
+      // gltfLoader.setDRACOLoader(dracoLoader);
+      // gltfLoader.load("./moudle/humberger.glb", (gltf) => {
+      //   console.log(gltf);
+      //   this.mixanim = new THREE.AnimationMixer(gltf.scene);
+      //   const anim = this.mixanim.clipAction(gltf.animations[0]);
+      //   anim.play();
+      //   console.log(gltf);
+      //   gltf.scene.scale.set(1, 1, 1);
+      //   this.scene1.scenes.add(gltf.scene);
+      // });
+    }
+    //着色器
+    {
+      const planegeo = new THREE.PlaneGeometry(10, 10, 128, 128);
+      const chinatexture = new THREE.TextureLoader().load("./imgs/china.webp");
+      //着色器
+      const plaemeta = new THREE.RawShaderMaterial({
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        uniforms: {
+          uchina: { value: chinatexture },
+          maxsin: { value: 0.4 },
+          maxlang: { value: 1.0 },
+          time: { value: 0 },
+          color1: { value: new THREE.Color("#186691") },
+          color2: { value: new THREE.Color("#9bd8ff") },
+        },
+        side: THREE.DoubleSide,
+        transparent: true,
+      });
+      this.ls = plaemeta;
+      this.dat
+        .add(plaemeta.uniforms.maxsin, "value")
+        .name("maxsin")
+        .min(0.1)
+        .max(2)
+        .step(0.01);
+      this.dat
+        .add(plaemeta.uniforms.maxlang, "value")
+        .name("maxlang")
+        .min(0.1)
+        .max(2)
+        .step(0.01);
+      // 给每一个坐标添加随机数
+      const count = planegeo.attributes.position.count;
+      const array = new Float32Array(count);
+      for (let i = 0; i < count; i++) {
+        array[i] = Math.random();
+      }
+      planegeo.setAttribute("Arandom", new THREE.BufferAttribute(array, 1));
+      //添加到场景中
+      const plane = new THREE.Mesh(planegeo, plaemeta);
+      plane.rotation.x = -Math.PI / 2;
+
+      this.scene1.scenes.add(plane);
     }
     this.render();
   },
